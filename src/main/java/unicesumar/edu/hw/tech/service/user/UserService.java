@@ -15,23 +15,48 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public ResponseEntity getAllUsers() {
+        List<User> users = userRepository.findAll();
+        if (users.size() > 0) {
+            return new ResponseEntity(users, HttpStatus.OK);
+        }
+
+        return new ResponseEntity("Nenhum usuario cadastrado", HttpStatus.BAD_REQUEST);
     }
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    public ResponseEntity saveUser(User user) {
+        User userCreated = userRepository.save(user);
+        if (userCreated != null) {
+            return new ResponseEntity(userCreated, HttpStatus.CREATED);
+        }
+
+        return new ResponseEntity("Erro ao tentar cadastrar usuario", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    public Integer updateUser(User user) {
-        return userRepository.updateUser(user.getEmail(), user.getPassword(), user.getId());
+    public ResponseEntity updateUser(User user) {
+        Integer successFullyChanged = userRepository.updateUser(user.getEmail(), user.getPassword(), user.getId());
+        if (successFullyChanged > 0) {
+            return new ResponseEntity(user, HttpStatus.OK);
+        }
+
+        return new ResponseEntity("Erro ao atualizar usuario", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    public Integer deleteById(Long id) {
-        return userRepository.deleteUser(id);
+    public ResponseEntity deleteById(Long id) {
+        Integer successFullyDeleted = userRepository.deleteUser(id);
+        if (successFullyDeleted > 0) {
+            return new ResponseEntity("Usário excluido com sucesso!", HttpStatus.OK);
+        }
+
+        return new ResponseEntity("Erro ao deletar usuário", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     public ResponseEntity validateLogin(String email, String password) {
-        return userRepository.getUserByEmailAndPassword(email, password) != null ? new ResponseEntity("Login realizado com sucesso!", HttpStatus.OK) : new ResponseEntity("E-mail ou senha inválidos", HttpStatus.BAD_REQUEST);
+        User user = userRepository.getUserByEmailAndPassword(email, password);
+        if( user != null) {
+            return new ResponseEntity("Login realizado com sucesso!", HttpStatus.OK);
+        }
+
+        return new ResponseEntity("E-mail ou senha inválidos", HttpStatus.BAD_REQUEST);
     }
 }
